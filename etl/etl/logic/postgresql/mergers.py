@@ -12,7 +12,7 @@ class BaseMerger(MergerInt):
     def __init__(self, pg_connection: connection) -> None:
         self.connection = pg_connection
 
-    def get_query(self) -> str:
+    def get_query(self, filter: bool = True) -> str:
         query = f"""
         --sql
         SELECT
@@ -24,19 +24,22 @@ class BaseMerger(MergerInt):
             fw.created,
             fw.modified,
             ARRAY_AGG (DISTINCT g.name) as genres,
-            JSON_AGG (
-                DISTINCT jsonb_build_object(
-                    'person_role', pfw.role,
-                    'person_id', p.id,
-                    'person_name', p.full_name
-                )
+            COALESCE (
+                JSON_AGG(
+                    DISTINCT jsonb_build_object(
+                        'person_role', pfw.role,
+                        'person_id', p.id,
+                        'person_name', p.full_name
+                    )
+                ) FILTER (WHERE p.id is not null),
+                '[]'
             ) as persons
         FROM {self.table} as fw
         LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
         LEFT JOIN content.person p ON p.id = pfw.person_id
         LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
         LEFT JOIN content.genre g ON g.id = gfw.genre_id
-        WHERE fw.id IN %s
+        {'WHERE fw.id IN %s' if filter else ''}
         GROUP BY fw.id
         ORDER BY fw.modified
         ;
@@ -44,12 +47,16 @@ class BaseMerger(MergerInt):
         return query
 
     def get_films_data(
-        self, films_ids: list[UUID]
+        self, filter_films_ids: list[UUID] | None
     ) -> Generator[list[dict[str, Any]], None, None]:
-        query = self.get_query()
-
         with self.connection.cursor() as cursor:
-            cursor.execute(query, vars=(tuple(films_ids),))
+            if filter_films_ids is None:
+                query = self.get_query(filter=False)
+                cursor.execute(query)
+            else:
+                query = self.get_query()
+                cursor.execute(query, vars=(tuple(filter_films_ids),))
+
             film_data = cursor.fetchmany(size=self.batch_size)
             while film_data:
                 logger.debug(

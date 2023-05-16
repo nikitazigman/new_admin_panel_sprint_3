@@ -33,7 +33,7 @@ class ProducerInt(PostgreWorkerInt):
 class MergerInt(PostgreWorkerInt):
     @abstractmethod
     def get_films_data(
-        self, films_ids: list[UUID]
+        self, filter_films_ids: list[UUID] | None
     ) -> Generator[list[dict[str, Any]], None, None]:
         ...
 
@@ -73,7 +73,7 @@ class ExtractorInt(PostgreWorkerInt):
         ...
 
     @abstractmethod
-    def get_modified_films(
-        self, last_checkup: datetime | None = None
+    def get_films(
+        self, last_checkup: datetime | None
     ) -> Generator[list[dict[str, Any]], None, None]:
         ...

@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  swagger:
+    image: swaggerapi/swagger-ui 
+    restart: always 
+    volumes:
+      - ./openapi.yaml:/swagger.yaml
+    environment:
+      - SWAGGER_JSON=/swagger.yaml
+    ports:
+      - 8080:8080
+    networks:
+      - movies_app
+    
+
+
+networks:
+  movies_app:

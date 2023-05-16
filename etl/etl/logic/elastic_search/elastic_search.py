@@ -10,7 +10,6 @@ class ElasticSearchLoader:
     def __init__(self, settings: ESSettings) -> None:
         self.settings = settings
         self.session = requests.session()
-        # self.session.headers.update("Content-Type: application/json")
 
     def get_base_url(self) -> str:
         return f"http://{self.settings.host}:{self.settings.port}"
@@ -43,4 +42,8 @@ class ElasticSearchLoader:
             data=bulk.to_bulk_request(),
         )
 
-        print(f"{result.status_code=}, {result.json()=}")
+        if result.status_code // 100 == 2:
+            logger.info("Successfully loaded bulk")
+            return
+
+        logger.error(f"Something went wrong got {result.status_code} status code")

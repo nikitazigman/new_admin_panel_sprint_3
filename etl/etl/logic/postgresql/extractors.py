@@ -14,6 +14,7 @@ from etl.logic.postgresql.interfaces import (
     ProducerInt,
 )
 from psycopg2._psycopg import connection as PGConnection
+from itertools import chain
 
 
 class PostgreExtractor(ExtractorInt):
@@ -78,8 +79,12 @@ class PostgreExtractor(ExtractorInt):
     ) -> None:
         self.disconnect()
 
+    def get_all_films(self) -> Generator[list[dict[str, Any]], None, None]:
+        logger.info("Retieving all films")
+        yield from self.merger.get_films_data(filter_films_ids=None)
+
     def get_modified_films(
-        self, last_checkup: datetime | None = None
+        self, last_checkup: datetime
     ) -> Generator[list[dict[str, Any]], None, None]:
         logger.info(f"Retieving all films ids from the {last_checkup=}")
 
@@ -87,9 +92,19 @@ class PostgreExtractor(ExtractorInt):
         genre_ids = self.genre_producer.get_ids(last_checkup)
         person_ids = self.person_producer.get_ids(last_checkup)
 
-        modified_films_ids = self.enricher.get_modified_films_ids(
-            films_ids, genre_ids, person_ids
-        )
+        if [*films_ids, *genre_ids, *person_ids]:
+            modified_films_ids = self.enricher.get_modified_films_ids(
+                films_ids, genre_ids, person_ids
+            )
+            logger.info("Merging all related data to the modified films")
+            yield from self.merger.get_films_data(filter_films_ids=modified_films_ids)
 
-        logger.info("Merging all related data to the modified films")
-        yield from self.merger.get_films_data(modified_films_ids)
+        yield []
+
+    def get_films(
+        self, last_checkup: datetime | None = None
+    ) -> Generator[list[dict[str, Any]], None, None]:
+        if last_checkup is None:
+            yield from self.get_all_films()
+        else:
+            yield from self.get_modified_films(last_checkup)

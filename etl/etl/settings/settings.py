@@ -4,6 +4,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
+class StateSettings(BaseSettings):
+    state_path: Path = BASE_DIR.joinpath("state.json")
+
+
+class SystemSettings(BaseSettings):
+    sleep_time_sec: int = 10
+
+
 class PGSettings(BaseSettings):
     dbname: str = Field(env="DB_NAME")
     user: str = Field(env="DB_USER")

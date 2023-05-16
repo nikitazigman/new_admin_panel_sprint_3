@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import datetime
 from enum import Enum
 import json
+from typing import cast
 
 
 class Roles(Enum):
@@ -18,7 +19,7 @@ class ESPerson(BaseModel):
 
 class ESMoviesDoc(BaseModel):
     id: str
-    imdb_rating: float
+    imdb_rating: float | None
     genre: str
     title: str
     description: str | None
@@ -66,12 +67,19 @@ class FilmWork(BaseModel):
     id: UUID
     title: str
     description: str | None
-    rating: float
+    rating: float | None
     type: str
     created: datetime
     modified: datetime
-    genres: list[str]
+    genres: list
     persons: list[Person]
+
+    @validator("genres")
+    def convert_genres(cls, value: list) -> list[str]:
+        if not all(value):
+            return [""]
+
+        return cast(list[str], value)
 
     def transform_to_es_doc(self) -> ESMoviesDoc:
         def get_persons_by(role: Roles) -> list[ESPerson]:

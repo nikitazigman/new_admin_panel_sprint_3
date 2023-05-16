@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:1.19.2
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/site.conf:/etc/nginx/conf.d/site.conf:ro
+      - static_volume_test:/data/static
+    depends_on:
+      - app
+      - postgres
+    ports:
+      - 80:80
+    networks:
+      - movies_app
+
+  app:
+    build: ./app
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - static_volume_test:/opt/app/static
+    networks:
+      - movies_app
+
+  postgres:
+    image: postgres:13
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/db_healthcheck.sh:/var/lib/db_healthcheck.sh:ro
+    environment:
+      - POSTGRES_PASSWORD=123qwe
+      - POSTGRES_USER=app
+      - POSTGRES_DB=movies_database
+    networks:
+      - movies_app
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U app -d movies_database" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+networks:
+  movies_app:
+
+
+volumes:
+  postgres_data:
+  static_volume_test:

@@ -100,7 +100,7 @@ class PGSettings(BaseModel):
     dbname: str
     user: str
     password: str
-    host: IPvAnyAddress
+    host: str
     port: int
 
     class Config:

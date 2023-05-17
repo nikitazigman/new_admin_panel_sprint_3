@@ -4,6 +4,7 @@ from psycopg2.errors import OperationalError
 from etl.logic.postgresql.interfaces import ExtractorInt
 import time
 from requests.exceptions import ConnectionError
+from etl.settings.settings import SystemSettings
 
 
 def get_time_interval(
@@ -81,3 +82,20 @@ def es_backoff(start_sleep_time=0.1, factor=2, border_sleep_time_sec=10):
         return inner
 
     return func_wrapper
+
+
+system_settings = SystemSettings()
+
+etl_pg_backoff = partial(
+    postgre_backoff,
+    start_sleep_time=system_settings.original_wait_for_sevice_time_sec,
+    factor=system_settings.wait_for_sevice_factor,
+    border_sleep_time_sec=system_settings.wait_for_sevice_edge_time_sec,
+)
+
+etl_es_backoff = partial(
+    es_backoff,
+    start_sleep_time=system_settings.original_wait_for_sevice_time_sec,
+    factor=system_settings.wait_for_sevice_factor,
+    border_sleep_time_sec=system_settings.wait_for_sevice_edge_time_sec,
+)

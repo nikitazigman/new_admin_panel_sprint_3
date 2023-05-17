@@ -6,7 +6,7 @@ from typing import Type, Any, Generator
 from types import TracebackType
 from loguru import logger
 from datetime import datetime
-from etl.logic.backoff.backoff import postgre_backoff
+from etl.logic.backoff.backoff import etl_pg_backoff
 from etl.logic.postgresql.interfaces import (
     EnricherInt,
     ExtractorInt,
@@ -104,7 +104,7 @@ class PostgreExtractor(ExtractorInt):
 
         yield []
 
-    @postgre_backoff()
+    @etl_pg_backoff()
     def get_films(
         self, last_checkup: datetime | None = None
     ) -> Generator[list[dict[str, Any]], None, None]:

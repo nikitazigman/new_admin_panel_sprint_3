@@ -6,7 +6,7 @@ import sqlite3
 
 from loguru import logger
 
-from logic.data_types import TableData, TableType
+from sqlite_to_postgres.logic.data_types import TableData, TableType
 
 
 class SQLiteExtractorInterface(ABC):

@@ -55,7 +55,7 @@ def main() -> None:
 
         logger.info(f"{counter} films have been successfully synchronized.")
         logger.info("Going to sleep")
-        sleep(system_settings.sleep_time_sec)
+        sleep(system_settings.synhronization_time_sec)
 
 
 # ToDo: Fail tollerance

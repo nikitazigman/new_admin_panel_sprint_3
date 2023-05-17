@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
 from loguru import logger
 
-from logic.data_types import PGSettings
-from logic.postgres_saver import PostgresSaver
-from logic.sqlite_extractor import SQLiteExtractor
-from settings import settings as env_settings
+from sqlite_to_postgres.logic.data_types import PGSettings
+from sqlite_to_postgres.logic.postgres_saver import PostgresSaver
+from sqlite_to_postgres.logic.sqlite_extractor import SQLiteExtractor
+from sqlite_to_postgres.settings import settings as env_settings
 
 
 load_dotenv(env_settings.BASE_DIR.joinpath(".env"))

@@ -7,7 +7,7 @@ from loguru import logger
 from psycopg2.errors import DataError
 from psycopg2.extras import DictCursor, execute_values
 
-from .data_types import (
+from sqlite_to_postgres.logic.data_types import (
     FilmWork,
     GenericTable,
     Genre,

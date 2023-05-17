@@ -1,9 +1,95 @@
-version: '3.9'
+version: "3.9"
+
 services:
+  nginx:
+    image: nginx:1.19.2
+    restart: always
+    volumes:
+      - ./movies_admin/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./movies_admin/nginx/site.conf:/etc/nginx/conf.d/site.conf:ro
+      - static_volume_test:/data/static
+    depends_on:
+      - app
+      - postgres
+    ports:
+      - 80:80
+    networks:
+      - movies_app
+
+  app:
+    build: ./movies_admin/app
+    restart: always
+    env_file:
+      - ./movies_admin/prod.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - static_volume_test:/opt/app/static
+    networks:
+      - movies_app
+
+  postgres:
+    image: postgres:13
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./movies_admin/prod.env
+    networks:
+      - movies_app
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U app -d movies_database" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
   elastic_search:
     image: elasticsearch:8.6.2
-    ports:
-      - 9200:9200
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+    healthcheck:
+      test: curl -s http://elastic_search:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
+    networks:
+      - movies_app
+    ports:
+      - 9200:9200
+
+  sql_to_pg:
+    build: ./sqlite_to_postgres
+    env_file:
+      - ./sqlite_to_postgres/prod.env
+    networks:
+      - movies_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  etl:
+    build: ./etl
+    restart: always
+    env_file:
+      - ./etl/prod.env
+    volumes:
+      - ./etl/state.json:/etl/state.json
+    networks:
+      - movies_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elastic_search:
+        condition: service_healthy
+    
+
+networks:
+  movies_app:
+      name: movies_app
+
+
+volumes:
+  postgres_data:
+  static_volume_test:

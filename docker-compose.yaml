@@ -48,7 +48,10 @@ services:
     image: elasticsearch:8.6.2
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=123qwe
+      - ELASTIC_USERNAME=elastic
+    volumes:
+      - elastic_volume:/usr/share/elasticsearch/data
     healthcheck:
       test: curl -s http://elastic_search:9200 >/dev/null || exit 1
       interval: 30s
@@ -93,3 +96,4 @@ networks:
 volumes:
   postgres_data:
   static_volume_test:
+  elastic_volume:

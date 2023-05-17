@@ -25,10 +25,9 @@ class ElasticSearchLoaderInt(ABC):
 
 class ElasticSearchLoader:
     def __init__(self, settings: ESSettings) -> None:
-        self.settings = settings
-        host = f"https://{settings.host}:{settings.port}"
+        self.path_to_schema = settings.path_to_schema
         self.es_client = Elasticsearch(
-            hosts=host,
+            hosts=f"https://{settings.host}:{settings.port}",
             basic_auth=(settings.user, settings.password),
             verify_certs=False,
         )
@@ -38,7 +37,7 @@ class ElasticSearchLoader:
         logger.info("loading ES schema")
 
         index_schema: dict[str, Any]
-        with open(self.settings.path_to_schema, "r") as file:
+        with open(self.path_to_schema, "r") as file:
             index_schema = json.load(file)
 
         self.es_client.options(ignore_status=400).indices.create(

@@ -22,9 +22,7 @@ COPY pyproject.toml pyproject.toml
 RUN poetry config installer.max-workers 10 \
     && poetry install 
 
-# COPY . .
+COPY . .
 
 # RUN chmod +x /opt/app/run.sh
 
-# EXPOSE 8000
-# ENTRYPOINT ["sh","/opt/app/run.sh"]

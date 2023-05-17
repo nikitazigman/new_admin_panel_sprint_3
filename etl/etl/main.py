@@ -25,39 +25,43 @@ def main() -> None:
     state = State(state_settings.state_path.absolute())
 
     es_loader = ElasticSearchLoader(settings=es_settings)
+    pg_extractor = PostgreExtractor(
+        settings=pg_settings,
+        film_producer_class=FilmWorkProducer,
+        genre_producer_class=GenreProducer,
+        person_producer_class=PersonProducer,
+        enricher_class=BaseEnricher,
+        merger_class=BaseMerger,
+    )
+
     es_loader.define_schema()
 
     while True:
         logger.info("Runnig the synchronization process")
+
         state_data = state.get_state()
+        state.update_state()
 
         counter = 0
 
-        with PostgreExtractor(
-            settings=pg_settings,
-            film_producer_class=FilmWorkProducer,
-            genre_producer_class=GenreProducer,
-            person_producer_class=PersonProducer,
-            enricher_class=BaseEnricher,
-            merger_class=BaseMerger,
-        ) as pg_extractor:
-            for film_batch in pg_extractor.get_films(state_data.last_checkup):
-                es_bulk = FilmWorkContainer(batch=film_batch).transform_to_es_bulk()  # type: ignore
-                counter += len(es_bulk.bulk)
+        for film_batch in pg_extractor.get_films(state_data.last_checkup):
+            es_bulk = FilmWorkContainer(batch=film_batch).transform_to_es_bulk()  # type: ignore
+            counter += len(es_bulk.bulk)
 
-                if es_bulk.bulk:
-                    es_loader.load_bulk(es_bulk)
+            if es_bulk.bulk:
+                es_loader.load_bulk(es_bulk)
 
-        state.update_state()
+        state.store_state()
 
         logger.info(f"{counter} films have been successfully synchronized.")
         logger.info("Going to sleep")
         sleep(system_settings.sleep_time_sec)
 
 
-# ToDo: Empty ids
 # ToDo: Fail tollerance
 # ToDo: Dockerfile
-# ToDO: add code from previous sprints
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.warning("Stop the ETL process")

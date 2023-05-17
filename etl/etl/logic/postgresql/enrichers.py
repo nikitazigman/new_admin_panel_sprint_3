@@ -10,21 +10,45 @@ class BaseEnricher(EnricherInt):
     def __init__(self, pg_connection: connection) -> None:
         self.connection = pg_connection
 
+    @staticmethod
+    def get_filtration_subquery(
+        films_ids: list[UUID],
+        genre_ids: list[UUID],
+        person_ids: list[UUID],
+    ) -> str:
+        mapping = zip(
+            [
+                "fw.id IN %(films_ids)s",
+                "pfw.person_id IN %(persons_ids)s",
+                "gfw.genre_id IN %(genres_ids)s",
+            ],
+            [films_ids, person_ids, genre_ids],
+        )
+
+        filtrations = []
+        for filter, data in mapping:
+            if data:
+                filtrations.append(filter)
+
+        return " OR ".join(filtrations)
+
     def get_query(
         self,
         films_ids: list[UUID],
         genre_ids: list[UUID],
         person_ids: list[UUID],
     ) -> str:
+        filtration_subquery = self.get_filtration_subquery(
+            films_ids, genre_ids, person_ids
+        )
+
         query = f"""
         --sql
         SELECT DISTINCT fw.id, fw.modified FROM {self.table} as fw
         LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
         LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
         WHERE
-            {'fw.id IN %(films_ids)s OR' if films_ids else ''}
-            {'pfw.person_id IN %(persons_ids)s OR' if person_ids else ''}
-            {'gfw.genre_id IN %(genres_ids)s' if genre_ids else ''}
+            {filtration_subquery}
         ORDER BY fw.modified
         ;
         """
@@ -41,7 +65,7 @@ class BaseEnricher(EnricherInt):
         vars = {}
         for key, value in mapping:
             if value:
-                vars[key] = value
+                vars[key] = tuple(value)
 
         return vars
 

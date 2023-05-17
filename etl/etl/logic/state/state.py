@@ -26,6 +26,10 @@ class StateInt(ABC):
         ...
 
     @abstractmethod
+    def store_state(self) -> None:
+        ...
+
+    @abstractmethod
     def update_state(self) -> None:
         ...
 
@@ -33,6 +37,7 @@ class StateInt(ABC):
 class State(StateInt):
     def __init__(self, path: Path) -> None:
         self.path = path
+        self.state = StateData(last_checkup=None)
 
     def get_state(self) -> StateData:
         raw_state: dict[str, datetime]
@@ -45,12 +50,16 @@ class State(StateInt):
         with open(self.path, "r") as f:
             raw_state = json.load(f)
 
-        return StateData(**raw_state)
+        self.state = StateData(**raw_state)
+        return self.state
 
     def update_state(self) -> None:
         logger.info("Updating the state")
 
-        new_state = StateData(last_checkup=datetime.now())
+        self.state = StateData(last_checkup=datetime.utcnow())
+
+    def store_state(self) -> None:
+        logger.info("Storing the state")
 
         with open(self.path, "w+") as f:
-            json.dump(new_state.get_dict(), f)
+            json.dump(self.state.get_dict(), f)

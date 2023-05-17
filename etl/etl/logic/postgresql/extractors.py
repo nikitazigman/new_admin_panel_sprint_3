@@ -6,7 +6,7 @@ from typing import Type, Any, Generator
 from types import TracebackType
 from loguru import logger
 from datetime import datetime
-
+from etl.logic.backoff.backoff import postgre_backoff
 from etl.logic.postgresql.interfaces import (
     EnricherInt,
     ExtractorInt,
@@ -14,7 +14,6 @@ from etl.logic.postgresql.interfaces import (
     ProducerInt,
 )
 from psycopg2._psycopg import connection as PGConnection
-from itertools import chain
 
 
 class PostgreExtractor(ExtractorInt):
@@ -92,6 +91,10 @@ class PostgreExtractor(ExtractorInt):
         genre_ids = self.genre_producer.get_ids(last_checkup)
         person_ids = self.person_producer.get_ids(last_checkup)
 
+        logger.debug(f"modified films {films_ids}")
+        logger.debug(f"modified genres {genre_ids}")
+        logger.debug(f"modified persons {person_ids}")
+
         if [*films_ids, *genre_ids, *person_ids]:
             modified_films_ids = self.enricher.get_modified_films_ids(
                 films_ids, genre_ids, person_ids
@@ -101,10 +104,12 @@ class PostgreExtractor(ExtractorInt):
 
         yield []
 
+    @postgre_backoff()
     def get_films(
         self, last_checkup: datetime | None = None
     ) -> Generator[list[dict[str, Any]], None, None]:
-        if last_checkup is None:
-            yield from self.get_all_films()
-        else:
-            yield from self.get_modified_films(last_checkup)
+        with self:
+            if last_checkup is None:
+                yield from self.get_all_films()
+            else:
+                yield from self.get_modified_films(last_checkup)

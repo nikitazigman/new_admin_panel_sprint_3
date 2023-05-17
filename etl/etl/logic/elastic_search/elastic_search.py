@@ -4,6 +4,7 @@ import json
 from typing import Any
 from loguru import logger
 from etl.logic.transform.dataclasses import ESBulk
+from etl.logic.backoff.backoff import es_backoff
 
 
 class ElasticSearchLoader:
@@ -14,6 +15,7 @@ class ElasticSearchLoader:
     def get_base_url(self) -> str:
         return f"http://{self.settings.host}:{self.settings.port}"
 
+    @es_backoff()
     def define_schema(self) -> None:
         logger.info("loading ES schema")
 
@@ -33,6 +35,7 @@ class ElasticSearchLoader:
 
         logger.info("ES schema already exists")
 
+    @es_backoff()
     def load_bulk(self, bulk: ESBulk) -> None:
         url = f"{self.get_base_url()}/_bulk"
 

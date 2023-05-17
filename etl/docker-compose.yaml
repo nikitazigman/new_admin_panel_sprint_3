@@ -4,10 +4,15 @@ services:
     image: elasticsearch:8.6.2
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=123qwe
+      - ELASTIC_USERNAME=elastic
     networks:
       - movies_app
-
+    ports:
+      - 9200:9200
+    volumes:
+      - elastic_volume:/usr/share/elasticsearch/data
+    
   etl:
     build: .
     restart: always
@@ -22,3 +27,5 @@ networks:
   movies_app:
     name: movies_app
 
+volumes:
+  elastic_volume:

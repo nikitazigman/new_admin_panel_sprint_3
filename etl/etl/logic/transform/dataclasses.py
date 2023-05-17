@@ -40,21 +40,12 @@ class ESBulk(BaseModel):
 
     bulk: list[ESMoviesDoc]
 
-    def to_bulk_request(self) -> str:
-        def get_index_description(doc: ESMoviesDoc) -> str:
-            index_template = {"index": {"_index": self.index, "_id": str(doc.id)}}
-            return json.dumps(index_template)
-
-        def get_doc_properties(doc: ESMoviesDoc) -> str:
-            return json.dumps(doc.dict())
-
-        bulk: list[str] = []
+    def to_actions(self) -> list[dict]:
+        actions: list[dict] = []
         for doc in self.bulk:
-            bulk.append(get_index_description(doc))
-            bulk.append(get_doc_properties(doc))
-        bulk.append("\n")
+            actions.append({"_id": doc.id, "_index": self.index, **doc.dict()})
 
-        return "\n".join(bulk)
+        return actions
 
 
 class Person(BaseModel):

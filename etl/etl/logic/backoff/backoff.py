@@ -3,8 +3,8 @@ from loguru import logger
 from psycopg2.errors import OperationalError
 from etl.logic.postgresql.interfaces import ExtractorInt
 import time
-from requests.exceptions import ConnectionError
 from etl.settings.settings import SystemSettings
+from elasticsearch.exceptions import ConnectionError
 
 
 def get_time_interval(

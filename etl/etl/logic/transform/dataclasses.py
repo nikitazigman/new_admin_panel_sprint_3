@@ -20,10 +20,10 @@ class ESPerson(BaseModel):
 class ESMoviesDoc(BaseModel):
     id: str
     imdb_rating: float | None
-    genre: str
+    genre: list[str]
     title: str
     description: str | None
-    director: str | None
+    director: list[str]
     actors_names: list[str]
     writers_names: list[str]
     actors: list[ESPerson]
@@ -46,7 +46,7 @@ class ESBulk(BaseModel):
             return json.dumps(index_template)
 
         def get_doc_properties(doc: ESMoviesDoc) -> str:
-            return json.dumps(doc.dict(exclude={"id"}))
+            return json.dumps(doc.dict())
 
         bulk: list[str] = []
         for doc in self.bulk:
@@ -91,18 +91,19 @@ class FilmWork(BaseModel):
 
         actors = get_persons_by(Roles.ACTOR)
         writers = get_persons_by(Roles.WRITTER)
-        director = get_persons_by(Roles.DIRECTOR)
+        directors = get_persons_by(Roles.DIRECTOR)
 
         actors_names = [i.name for i in actors]
         writers_names = [i.name for i in writers]
+        directors_names = [i.name for i in directors]
 
         es_index = ESMoviesDoc(
             id=str(self.id),
             imdb_rating=self.rating,
-            genre=", ".join(self.genres),
+            genre=self.genres,
             title=self.title,
             description=self.description,
-            director=director[0].name if director else None,
+            director=directors_names,
             actors_names=actors_names,
             writers_names=writers_names,
             actors=actors,

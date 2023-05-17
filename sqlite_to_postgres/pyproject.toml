@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "sqlite_to_postgres"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 pydantic = "^1.10.7"
 loguru = "^0.7.0"
 python-dotenv = "^1.0.0"

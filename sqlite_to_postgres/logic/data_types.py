@@ -31,7 +31,7 @@ class TimeStampedMixin(GenericTable):
     modified: datetime = Field(alias="updated_at")
 
     @validator("created", "modified")
-    def date_now(cls, date: str, values: dict[str, str], **kwargs) -> str:
+    def date_now(cls, date: str, values: dict[str, str], **kwargs) -> datetime:
         return datetime.now()
 
 
@@ -67,7 +67,7 @@ class PersonFilmWork(UUIDMixin):
     created: datetime = Field(alias="created_at")
 
     @validator("created")
-    def date_now(cls, date: str, values: dict[str, str], **kwargs) -> str:
+    def date_now(cls, date: str, values: dict[str, str], **kwargs) -> datetime:
         return datetime.now()
 
 
@@ -78,7 +78,7 @@ class GenreFilmwork(UUIDMixin):
     created: datetime = Field(alias="created_at")
 
     @validator("created")
-    def date_now(cls, date: str, values: dict[str, str], **kwargs) -> str:
+    def date_now(cls, date: str, values: dict[str, str], **kwargs) -> datetime:
         return datetime.now()
 
 

@@ -31,6 +31,8 @@ def main() -> None:
         logger.info("Runnig the synchronization process")
         state_data = state.get_state()
 
+        counter = 0
+
         with PostgreExtractor(
             settings=pg_settings,
             film_producer_class=FilmWorkProducer,
@@ -41,16 +43,18 @@ def main() -> None:
         ) as pg_extractor:
             for film_batch in pg_extractor.get_films(state_data.last_checkup):
                 es_bulk = FilmWorkContainer(batch=film_batch).transform_to_es_bulk()  # type: ignore
+                counter += len(es_bulk.bulk)
+
                 if es_bulk.bulk:
                     es_loader.load_bulk(es_bulk)
 
         state.update_state()
 
-        logger.info("Data have been successfully synchronized. Going to sleep")
+        logger.info(f"{counter} films have been successfully synchronized.")
+        logger.info("Going to sleep")
         sleep(system_settings.sleep_time_sec)
 
 
-# ToDo: Postman fail
 # ToDo: Empty ids
 # ToDo: Fail tollerance
 # ToDo: Dockerfile

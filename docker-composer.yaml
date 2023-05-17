@@ -1,9 +1,0 @@
-version: '3.9'
-services:
-  elastic_search:
-    image: elasticsearch:8.6.2
-    ports:
-      - 9200:9200
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false

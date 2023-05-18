@@ -289,3 +289,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# elt state
+./etl/state.json

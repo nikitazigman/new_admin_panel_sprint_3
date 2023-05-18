@@ -1,7 +1,7 @@
 dbname: str
 user: str
 password: str
-host: IPvAnyAddress
+host: str
 port: int
 
 chunk_size: int | None

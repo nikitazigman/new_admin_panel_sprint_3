@@ -1,10 +1,13 @@
-import requests
-from etl.settings.settings import ESSettings
 import json
+from http import HTTPStatus
 from typing import Any
+
+import requests
 from loguru import logger
-from etl.logic.transform.dataclasses import ESBulk
+
 from etl.logic.backoff.backoff import etl_es_backoff
+from etl.logic.transform.dataclasses import ESBulk
+from etl.settings.settings import ESSettings
 
 
 class ElasticSearchLoader:
@@ -27,7 +30,7 @@ class ElasticSearchLoader:
         url = f"{self.get_base_url()}/{self.settings.index}"
         result = self.session.put(url=url, json=index_schema)
 
-        if result.status_code == 400:
+        if result.status_code == HTTPStatus.BAD_REQUEST:
             error_msg = result.json()
             error_type = error_msg["error"]["type"]
             if error_type != "resource_already_exists_exception":
@@ -45,7 +48,7 @@ class ElasticSearchLoader:
             data=bulk.to_bulk_request(),
         )
 
-        if result.status_code // 100 == 2:
+        if result.status_code == HTTPStatus.OK:
             logger.info("Successfully loaded bulk")
             return
 

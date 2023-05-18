@@ -291,4 +291,4 @@ dmypy.json
 cython_debug/
 
 # elt state
-./etl/state.json
+etl/etl_state/

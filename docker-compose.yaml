@@ -59,23 +59,13 @@ services:
     ports:
       - 9200:9200
 
-  sql_to_pg:
-    build: ./sqlite_to_postgres
-    env_file:
-      - ./sqlite_to_postgres/prod.env
-    networks:
-      - movies_app
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   etl:
     build: ./etl
     restart: always
     env_file:
       - ./etl/prod.env
     volumes:
-      - ./etl/state.json:/etl/state.json
+      - etl_volume:/etl/etl_state
     networks:
       - movies_app
     depends_on:
@@ -93,3 +83,4 @@ networks:
 volumes:
   postgres_data:
   static_volume_test:
+  etl_volume:

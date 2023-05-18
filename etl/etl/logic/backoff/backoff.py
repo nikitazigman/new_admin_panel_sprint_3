@@ -1,9 +1,11 @@
-from functools import wraps, partial
+import time
+from functools import partial, wraps
+
 from loguru import logger
 from psycopg2.errors import OperationalError
-from etl.logic.postgresql.interfaces import ExtractorInt
-import time
 from requests.exceptions import ConnectionError
+
+from etl.logic.postgresql.interfaces import ExtractorInt
 from etl.settings.settings import SystemSettings
 
 

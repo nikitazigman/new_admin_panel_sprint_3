@@ -1,19 +1,18 @@
+from datetime import datetime
+from itertools import zip_longest
+from types import TracebackType
+from typing import Any, Generator, Type
+from uuid import UUID
+
 import psycopg2
+from loguru import logger
+from psycopg2._psycopg import connection as PGConnection
 from psycopg2.extras import DictCursor
 
-from etl.settings.settings import PGSettings
-from typing import Type, Any, Generator
-from types import TracebackType
-from loguru import logger
-from datetime import datetime
 from etl.logic.backoff.backoff import etl_pg_backoff
-from etl.logic.postgresql.interfaces import (
-    EnricherInt,
-    ExtractorInt,
-    MergerInt,
-    ProducerInt,
-)
-from psycopg2._psycopg import connection as PGConnection
+from etl.logic.postgresql.interfaces import (EnricherInt, ExtractorInt,
+                                             MergerInt, ProducerInt)
+from etl.settings.settings import PGSettings
 
 
 class PostgreExtractor(ExtractorInt):
@@ -87,22 +86,27 @@ class PostgreExtractor(ExtractorInt):
     ) -> Generator[list[dict[str, Any]], None, None]:
         logger.info(f"Retieving all films ids from the {last_checkup=}")
 
-        films_ids = self.film_producer.get_ids(last_checkup)
-        genre_ids = self.genre_producer.get_ids(last_checkup)
-        person_ids = self.person_producer.get_ids(last_checkup)
+        modified_films_ids: set[UUID] = set()
+        for films_ids, genre_ids, person_ids in zip_longest(
+            self.film_producer.get_ids(last_checkup),
+            self.genre_producer.get_ids(last_checkup),
+            self.person_producer.get_ids(last_checkup),
+        ):
+            logger.debug(f"modified films {films_ids}")
+            logger.debug(f"modified genres {genre_ids}")
+            logger.debug(f"modified persons {person_ids}")
 
-        logger.debug(f"modified films {films_ids}")
-        logger.debug(f"modified genres {genre_ids}")
-        logger.debug(f"modified persons {person_ids}")
-
-        if [*films_ids, *genre_ids, *person_ids]:
-            modified_films_ids = self.enricher.get_modified_films_ids(
-                films_ids, genre_ids, person_ids
+            modified_films_ids.update(
+                self.enricher.get_modified_films_ids(films_ids, genre_ids, person_ids)
             )
-            logger.info("Merging all related data to the modified films")
-            yield from self.merger.get_films_data(filter_films_ids=modified_films_ids)
 
-        yield []
+        if modified_films_ids:
+            logger.info("Merging all related data to the modified films")
+            yield from self.merger.get_films_data(
+                filter_films_ids=list(modified_films_ids)
+            )
+        else:
+            yield []
 
     @etl_pg_backoff()
     def get_films(

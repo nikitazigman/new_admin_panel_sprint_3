@@ -1,9 +1,10 @@
-from pydantic import BaseModel, validator
-from uuid import UUID
+import json
 from datetime import datetime
 from enum import Enum
-import json
 from typing import cast
+from uuid import UUID
+
+from pydantic import BaseModel, validator
 
 
 class Roles(Enum):

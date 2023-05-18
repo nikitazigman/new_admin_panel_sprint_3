@@ -1,7 +1,9 @@
 from uuid import UUID
-from etl.logic.postgresql.interfaces import EnricherInt
+
 from loguru import logger
 from psycopg2._psycopg import connection
+
+from etl.logic.postgresql.interfaces import EnricherInt
 
 
 class BaseEnricher(EnricherInt):
@@ -12,9 +14,9 @@ class BaseEnricher(EnricherInt):
 
     @staticmethod
     def get_filtration_subquery(
-        films_ids: list[UUID],
-        genre_ids: list[UUID],
-        person_ids: list[UUID],
+        films_ids: list[UUID] | None,
+        genre_ids: list[UUID] | None,
+        person_ids: list[UUID] | None,
     ) -> str:
         mapping = zip(
             [
@@ -34,9 +36,9 @@ class BaseEnricher(EnricherInt):
 
     def get_query(
         self,
-        films_ids: list[UUID],
-        genre_ids: list[UUID],
-        person_ids: list[UUID],
+        films_ids: list[UUID] | None,
+        genre_ids: list[UUID] | None,
+        person_ids: list[UUID] | None,
     ) -> str:
         filtration_subquery = self.get_filtration_subquery(
             films_ids, genre_ids, person_ids
@@ -55,7 +57,10 @@ class BaseEnricher(EnricherInt):
         return query
 
     def get_query_vars(
-        self, films_ids: list[UUID], genre_ids: list[UUID], person_ids: list[UUID]
+        self,
+        films_ids: list[UUID] | None,
+        genre_ids: list[UUID] | None,
+        person_ids: list[UUID] | None,
     ) -> dict[str, tuple]:
         mapping = zip(
             ["films_ids", "genres_ids", "persons_ids"],
@@ -71,9 +76,9 @@ class BaseEnricher(EnricherInt):
 
     def get_modified_films_ids(
         self,
-        films_ids: list[UUID],
-        genre_ids: list[UUID],
-        person_ids: list[UUID],
+        films_ids: list[UUID] | None,
+        genre_ids: list[UUID] | None,
+        person_ids: list[UUID] | None,
     ) -> list[UUID]:
         logger.debug("Getting all modified films ids from the last checkup")
 

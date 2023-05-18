@@ -1,8 +1,10 @@
+from typing import Any, Generator
 from uuid import UUID
-from typing import Generator, Any
-from etl.logic.postgresql.interfaces import MergerInt
-from psycopg2._psycopg import connection
+
 from loguru import logger
+from psycopg2._psycopg import connection
+
+from etl.logic.postgresql.interfaces import MergerInt
 
 
 class BaseMerger(MergerInt):
@@ -57,10 +59,8 @@ class BaseMerger(MergerInt):
                 query = self.get_query()
                 cursor.execute(query, vars=(tuple(filter_films_ids),))
 
-            film_data = cursor.fetchmany(size=self.batch_size)
-            while film_data:
+            while film_data := cursor.fetchmany(size=self.batch_size):
                 logger.debug(
                     f"Retrieved {len(film_data)} rows from `{self.table}` table"
                 )
                 yield film_data
-                film_data = cursor.fetchmany(size=self.batch_size)

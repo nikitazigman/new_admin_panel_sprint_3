@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
-from typing import Generator, Any, Type
 from datetime import datetime
-from etl.settings.settings import PGSettings
 from types import TracebackType
+from typing import Any, Generator, Type
+from uuid import UUID
+
 from psycopg2._psycopg import connection
+
+from etl.settings.settings import PGSettings
 
 
 class PostgreWorkerInt(ABC):
@@ -26,7 +28,9 @@ class EnricherInt(PostgreWorkerInt):
 
 class ProducerInt(PostgreWorkerInt):
     @abstractmethod
-    def get_ids(self, last_checkup: datetime | None) -> list[UUID]:
+    def get_ids(
+        self, last_checkup: datetime | None
+    ) -> Generator[list[UUID], None, None]:
         ...
 
 

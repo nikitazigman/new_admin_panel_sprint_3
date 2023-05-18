@@ -1,5 +1,6 @@
-from pydantic import BaseSettings, Field
 from pathlib import Path
+
+from pydantic import BaseSettings, Field
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -11,7 +12,12 @@ class MetaSettings(BaseSettings):
 
 
 class StateSettings(MetaSettings):
-    state_path: Path = BASE_DIR.joinpath("state.json")
+    state_folder: Path = BASE_DIR.joinpath("etl_state")
+    file_name: str = "state.json"
+
+    def get_file_path(self) -> Path:
+        self.state_folder.mkdir(exist_ok=True)
+        return self.state_folder.joinpath(self.file_name)
 
 
 class SystemSettings(MetaSettings):

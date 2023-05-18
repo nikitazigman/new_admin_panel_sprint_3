@@ -5,20 +5,31 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-    networks:
-      - movies_app
+    volumes:
+      - elastic_volume:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -s http://127.0.0.1:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
+    ports:
+      - 9200:9200
 
   etl:
     build: .
     restart: always
     env_file:
-      - prod.env
+      - .env
     volumes:
-      - ./state.json:/etl/state.json
-    networks:
-      - movies_app
+      - ./etl_state:/etl/etl_state:rw
+    depends_on:
+      elastic_search:
+        condition: service_healthy
+    network_mode: host
 
-networks:
-  movies_app:
-    name: movies_app
+
+
+volumes:
+  etl_state:
+  elastic_volume:
 

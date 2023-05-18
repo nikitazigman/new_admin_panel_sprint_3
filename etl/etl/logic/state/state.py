@@ -1,9 +1,12 @@
-from pathlib import Path
-from datetime import datetime
-from abc import ABC, abstractmethod
 import json
-from pydantic import BaseModel
+from abc import ABC, abstractmethod
+from datetime import datetime
+from pathlib import Path
+
 from loguru import logger
+from pydantic import BaseModel
+
+from etl.settings.settings import StateSettings
 
 
 class StateData(BaseModel):
@@ -35,8 +38,8 @@ class StateInt(ABC):
 
 
 class State(StateInt):
-    def __init__(self, path: Path) -> None:
-        self.path = path
+    def __init__(self, settings: StateSettings) -> None:
+        self.path = settings.get_file_path()
         self.state = StateData(last_checkup=None)
 
     def get_state(self) -> StateData:
@@ -44,7 +47,7 @@ class State(StateInt):
 
         logger.info("Reading the state")
 
-        if not self.path.exists():
+        if not self.path.is_file():
             return StateData(last_checkup=None)
 
         with open(self.path, "r") as f:

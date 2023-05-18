@@ -26,25 +26,25 @@ repos:
     hooks:
       - id: isort
         args:
-          [service/]
+          [etl/]
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:
       - id: black
-        args: [service/]
+        args: [etl/]
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.4
     hooks:
       - id: bandit
-        args: [-r, service/]
+        args: [-r, etl/]
 
   - repo: https://github.com/PyCQA/flake8
     rev: 6.0.0
     hooks:
       - id: flake8 # E***, W***, F***
-        args: [service/]
+        args: [etl/]
         additional_dependencies:
           - dlint # DUO***
           - flake8-2020 # YTT***
